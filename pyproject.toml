@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "brain4me"
+version = "0.1.0"
+description = "MVP local-first para o projeto Brain4me."
+requires-python = ">=3.11"
+dependencies = [
+  "click>=8.1",
+  "PyYAML>=6.0",
+  "networkx>=3.0",
+  "spacy>=3.7",
+  "streamlit>=1.44",
+]
+
+[project.scripts]
+brain4me = "brain4me.cli:cli"
+brain = "brain4me.cli:cli"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

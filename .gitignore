@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.pytest_tmp/
+.pytest_cache/
+.pytest_cache_local/
+.tmp-tests/
+pytest-cache-files-*/
+.worktrees/
+
+# runtime / local
+*.db
+.claude/
+docs/superpowers/

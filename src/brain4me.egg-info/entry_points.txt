@@ -1,0 +1,3 @@
+[console_scripts]
+brain = brain4me.cli:cli
+brain4me = brain4me.cli:cli
