@@ -9,7 +9,8 @@ import click
 
 from .graph_cache import get_cache_snapshot, invalidate_cache
 from .graphs import build_context_graph, build_knowledge_graph
-from .ingest import ingest_markdown_note
+from .converters import convert_file
+from .ingest import ingest_markdown_note, ingest_raw_text
 from .metrics import get_metrics_snapshot
 from .memory_governance import list_patterns, remove_pattern, update_pattern_score
 from .query import ask_question, explain_entity, explain_topic
@@ -134,6 +135,29 @@ def ingest_markdown_command(db_path: Path, file_path: Path) -> None:
 @click.argument("file_path", type=click.Path(exists=True, path_type=Path))
 def ingest_command(db_path: Path, file_path: Path) -> None:
     _ingest_file(db_path, file_path)
+
+
+@cli.command("ingest-file")
+@click.option("--db", "db_path", default="brain4me.db")
+@click.option("--file", "file_path", required=True)
+@click.option("--compartment", default="default")
+def ingest_file_command(db_path: str, file_path: str, compartment: str) -> None:
+    """Ingest a document file (PDF, DOCX, TXT) into Brain4me."""
+    path = Path(file_path)
+    ext = path.suffix.lower().lstrip(".")
+    text = convert_file(path)
+    result = ingest_raw_text(
+        db_path=db_path,
+        raw_text=text,
+        source_path=file_path,
+        source_type=ext,
+        compartment=compartment,
+    )
+    click.echo(
+        f"Ingested {result.entities_created} entities, "
+        f"{result.relations_created} relations, "
+        f"{result.logs_created} warnings"
+    )
 
 
 @cli.command("explain-topic")

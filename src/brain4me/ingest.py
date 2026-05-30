@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-from .extractor import MarkdownExtractor, build_default_extractor
+from .extractor import ExtractionPayload, MarkdownExtractor, build_default_extractor
 from .graph_cache import invalidate_cache
 from .ingest_helpers import attach_context_items, create_automatic_conflicts, split_frontmatter
 from .models import IngestResult
@@ -24,29 +24,22 @@ from .storage import (
 )
 
 
-def ingest_markdown_note(
-    *,
+def _ingest_processed_text(
     db_path: str | Path,
-    markdown_text: str,
+    *,
+    result: IngestResult,
+    note_content: str,
     source_path: str,
-    extractor: MarkdownExtractor | None = None,
+    source_hash: str,
+    title: str,
+    compartment_slug: str,
+    source_type: str,
+    source_origin_type: str,
+    source_reliability: float,
+    extraction_payload: ExtractionPayload,
+    context_hints: list[str],
 ) -> IngestResult:
-    initialize_database(db_path)
-    result = IngestResult()
-    metadata, body = split_frontmatter(markdown_text)
-    compartment_slug = str(metadata.get("compartment", "default")).strip() or "default"
-    title = str(metadata.get("title", Path(source_path).stem)).strip() or Path(source_path).stem
-    source_type = str(metadata.get("source_type", "markdown")).strip() or "markdown"
-    source_origin_type = str(metadata.get("source_origin_type", "personal")).strip() or "personal"
-    source_reliability = default_source_reliability(source_origin_type)
-    extraction_payload = (extractor or build_default_extractor()).extract(body)
-    source_hash = hashlib.sha256(markdown_text.encode("utf-8")).hexdigest()
-    context_hints = [
-        canonical_name
-        for entity_type, canonical_name in extraction_payload.entity_items
-        if entity_type in {"Project", "Problem"}
-    ]
-
+    """Core ingestion logic shared between markdown and raw-text paths."""
     with connect(db_path) as conn:
         compartment_id = get_or_create_compartment(conn, compartment_slug)
         source_id = create_source(
@@ -62,7 +55,7 @@ def ingest_markdown_note(
         note_id = create_note(
             conn,
             source_id=source_id,
-            content_markdown=markdown_text,
+            content_markdown=note_content,
             summary=title,
             status="validated",
         )
@@ -214,3 +207,106 @@ def ingest_markdown_note(
 
     invalidate_cache(db_path)
     return result
+
+
+def ingest_markdown_note(
+    *,
+    db_path: str | Path,
+    markdown_text: str,
+    source_path: str,
+    extractor: MarkdownExtractor | None = None,
+) -> IngestResult:
+    initialize_database(db_path)
+    result = IngestResult()
+    metadata, body = split_frontmatter(markdown_text)
+    compartment_slug = str(metadata.get("compartment", "default")).strip() or "default"
+    title = str(metadata.get("title", Path(source_path).stem)).strip() or Path(source_path).stem
+    source_type = str(metadata.get("source_type", "markdown")).strip() or "markdown"
+    source_origin_type = str(metadata.get("source_origin_type", "personal")).strip() or "personal"
+    source_reliability = default_source_reliability(source_origin_type)
+    extraction_payload = (extractor or build_default_extractor()).extract(body)
+    source_hash = hashlib.sha256(markdown_text.encode("utf-8")).hexdigest()
+    context_hints = [
+        canonical_name
+        for entity_type, canonical_name in extraction_payload.entity_items
+        if entity_type in {"Project", "Problem"}
+    ]
+
+    return _ingest_processed_text(
+        db_path,
+        result=result,
+        note_content=markdown_text,
+        source_path=source_path,
+        source_hash=source_hash,
+        title=title,
+        compartment_slug=compartment_slug,
+        source_type=source_type,
+        source_origin_type=source_origin_type,
+        source_reliability=source_reliability,
+        extraction_payload=extraction_payload,
+        context_hints=context_hints,
+    )
+
+
+def ingest_raw_text(
+    *,
+    db_path: str | Path,
+    raw_text: str,
+    source_path: str,
+    source_type: str,
+    compartment: str = "default",
+    title: str | None = None,
+) -> IngestResult:
+    """Ingest raw text (extracted from PDF, DOCX, or TXT) into the brain.
+
+    Parameters
+    ----------
+    db_path : str or Path
+        Path to the SQLite database.
+    raw_text : str
+        The extracted plain text content.
+    source_path : str
+        Original file path (used for display and deduplication).
+    source_type : str
+        Document type: ``"pdf"``, ``"docx"``, or ``"txt"``.
+    compartment : str, optional
+        Compartment to store data under (default ``"default"``).
+    title : str or None, optional
+        Display title. Falls back to the stem of *source_path* when ``None``.
+
+    Returns
+    -------
+    IngestResult
+        Counts of entities, relations, context nodes, etc. created.
+    """
+    initialize_database(db_path)
+    result = IngestResult()
+
+    title = title or Path(source_path).stem
+    source_origin_type = "external"
+    source_reliability = default_source_reliability(source_origin_type)
+    extraction_payload = (build_default_extractor()).extract(raw_text)
+    source_hash = hashlib.sha256(raw_text.encode("utf-8")).hexdigest()
+    context_hints = [
+        canonical_name
+        for entity_type, canonical_name in extraction_payload.entity_items
+        if entity_type in {"Project", "Problem"}
+    ]
+
+    # Store a minimal markdown-like note so it works with the existing schema
+    note_content = f"# {title}\n\n{raw_text}"
+
+    return _ingest_processed_text(
+        db_path,
+        result=result,
+        note_content=note_content,
+        source_path=source_path,
+        source_hash=source_hash,
+        title=title,
+        compartment_slug=compartment,
+        source_type=source_type,
+        source_origin_type=source_origin_type,
+        source_reliability=source_reliability,
+        extraction_payload=extraction_payload,
+        context_hints=context_hints,
+    )

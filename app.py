@@ -12,7 +12,8 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from brain4me.feedback import fetch_recent_feedback_entries, record_feedback
-from brain4me.graph_cache import get_cache_snapshot
+from brain4me.graph_cache import get_cache_snapshot, get_cached_graphs
+from brain4me.graph_viz import build_graph_html
 from brain4me.metrics import get_metrics_snapshot
 from brain4me.memory_governance import list_patterns, remove_pattern
 from brain4me.query import ask_question
@@ -193,6 +194,15 @@ if result is not None:
                 st.write(f"- {label}")
         else:
             st.write("Nenhuma fonte registrada.")
+
+        # Graph visualization
+        cache = get_cached_graphs(db_path)
+        if cache.kg and cache.kg.number_of_nodes() > 0:
+            with st.expander("🗺️ Knowledge Graph", expanded=False):
+                entities = result.detected_entities if result.detected_entities else None
+                graph_html = build_graph_html(cache, highlight_entities=entities)
+                if graph_html:
+                    st.components.v1.html(graph_html, height=620, scrolling=False)
 
     with side_col:
         st.markdown("## Sinalizacao")

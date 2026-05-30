@@ -2,10 +2,12 @@ pyproject.toml
 src/brain4me/__init__.py
 src/brain4me/cli.py
 src/brain4me/context_builder.py
+src/brain4me/converters.py
 src/brain4me/decision_engine.py
 src/brain4me/extractor.py
 src/brain4me/feedback.py
 src/brain4me/graph_cache.py
+src/brain4me/graph_viz.py
 src/brain4me/graphs.py
 src/brain4me/ingest.py
 src/brain4me/ingest_helpers.py
@@ -34,8 +36,10 @@ src/brain4me.egg-info/entry_points.txt
 src/brain4me.egg-info/requires.txt
 src/brain4me.egg-info/top_level.txt
 tests/test_cli.py
+tests/test_converters.py
 tests/test_extractor.py
 tests/test_ingest.py
+tests/test_ingest_file.py
 tests/test_phase2.py
 tests/test_phase3.py
 tests/test_phase4.py

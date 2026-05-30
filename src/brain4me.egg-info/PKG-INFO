@@ -8,3 +8,5 @@ Requires-Dist: PyYAML>=6.0
 Requires-Dist: networkx>=3.0
 Requires-Dist: spacy>=3.7
 Requires-Dist: streamlit>=1.44
+Requires-Dist: pymupdf>=1.24
+Requires-Dist: python-docx>=1.1

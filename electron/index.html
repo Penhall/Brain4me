@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brain4me Desktop</title>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <h1>Brain4me Desktop</h1>
+      <span class="version">v0.1.0</span>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Config Section -->
+      <section class="card" id="config-section">
+        <div class="card-header">Configuration</div>
+        <div class="config-row">
+          <input
+            type="text"
+            id="db-path-input"
+            placeholder="/path/to/brain4me.db"
+            spellcheck="false"
+          />
+          <button class="btn btn-small" id="save-config-btn">Save</button>
+        </div>
+        <div class="config-status" id="config-status"></div>
+      </section>
+
+      <!-- Ingest Section -->
+      <section class="card" id="ingest-section">
+        <div class="card-header">Ingest Documents</div>
+
+        <div class="ingest-actions">
+          <button class="btn" id="add-files-btn">+ Add Files</button>
+          <button class="btn btn-success" id="ingest-all-btn" disabled>Ingest All</button>
+          <button class="btn btn-outline btn-small" id="clear-files-btn">Clear</button>
+        </div>
+
+        <!-- Drop zone -->
+        <div class="drop-zone" id="drop-zone">
+          Drop files here or click <strong>+ Add Files</strong>
+        </div>
+
+        <!-- File list -->
+        <ul class="file-list" id="file-list"></ul>
+
+        <!-- Progress bar -->
+        <div class="progress-container" id="progress-container" hidden>
+          <div class="progress-bar">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+          </div>
+          <div class="progress-label" id="progress-label"></div>
+        </div>
+      </section>
+
+      <!-- Log Section -->
+      <section class="card" id="log-section">
+        <div class="card-header">Activity Log</div>
+        <div class="log-container" id="log-container">
+          <div class="log-entry">
+            <span class="log-time">—</span>
+            <span class="log-msg">Ready. Configure the database path to begin.</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Status Bar -->
+    <footer class="status-bar" id="status-bar">
+      <span class="status-item">
+        <span class="status-dot offline" id="status-dot"></span>
+        <span id="status-text">Idle</span>
+      </span>
+      <span class="status-item">
+        <span id="summary-counts">— entities, — relations</span>
+      </span>
+      <span class="status-item" style="margin-left: auto;">
+        <span id="files-count">0 files selected</span>
+      </span>
+    </footer>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
