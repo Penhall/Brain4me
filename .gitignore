@@ -9,5 +9,10 @@ pytest-cache-files-*/
 
 # runtime / local
 *.db
+.env
+.venv/
 .claude/
 docs/superpowers/
+
+# build artifacts
+*.egg-info/
